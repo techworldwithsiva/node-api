@@ -1,0 +1,61 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: api-config
+data:
+  API_PORT: "3000"
+  DB: "node_app"
+  DBHOST: "toptal-student.crlsdqrua2mx.ap-south-1.rds.amazonaws.com"
+  DBPORT: "5432"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-secret
+type: Opaque
+data:
+  DBUSER: ZGV2ZWxvcGVy
+  DBPASS: RGV2b3BzMjAxOA==
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-api
+  labels:
+    app: node-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: node-api
+  template:
+    metadata:
+      labels:
+        app: node-api
+    spec:
+      containers:
+      - name: node-api
+        imagePullPolicy: Always
+        image: 752692907119.dkr.ecr.ap-south-1.amazonaws.com/node-api:latest
+        envFrom:
+        - configMapRef:
+            name: api-config
+        - secretRef:
+            name: api-secret
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-api
+spec:
+  type: LoadBalancer
+  selector:
+    app: node-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+
